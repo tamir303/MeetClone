@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { LayoutType, Theme } from '@/types';
+import { LayoutType, Theme } from '../types';
 
 interface UIState {
     sidebarOpen: boolean;

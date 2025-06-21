@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { socketService } from '@/services/socket';
+import { socketService } from '../services/socket';
 
 export const useAudioLevel = (stream: MediaStream | null, enabled = true) => {
     const audioContextRef = useRef<AudioContext | null>(null);

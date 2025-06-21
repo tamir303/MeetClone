@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Video, Users, Shield } from 'lucide-react';
-import { Button } from '@/components/UI/Button';
+import { Button } from '../components/UI/Button';
 
 export const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -27,11 +27,6 @@ export const HomePage: React.FC = () => {
                 <Video className="h-8 w-8 text-blue-600 mr-3" />
                 <h1 className="text-2xl font-bold text-gray-900">MeetClone</h1>
               </div>
-              <nav className="hidden md:flex space-x-8">
-                <a href="#" className="text-gray-500 hover:text-gray-900">Features</a>
-                <a href="#" className="text-gray-500 hover:text-gray-900">Pricing</a>
-                <a href="#" className="text-gray-500 hover:text-gray-900">Support</a>
-              </nav>
             </div>
           </div>
         </header>

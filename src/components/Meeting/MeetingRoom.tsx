@@ -1,23 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useWebRTC } from '@/hooks/useWebRTC';
-import { useChat } from '@/hooks/useChat';
-import { useAudioLevel } from '@/hooks/useAudioLevel';
-import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useWebRTC } from '../../hooks/useWebRTC';
+import { useChat } from '../../hooks/useChat';
+import { useAudioLevel } from '../../hooks/useAudioLevel';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { useMeetingStore } from '../../stores/meetingStore';
-import { useParticipantStore } from '../../stores/participantsStore';
-import { VideoGrid } from '@/components/Media/VideoGrid';
-import { ControlBar } from '@/components/Navigation/ControlBar';
-import { ChatPanel } from '@/components/Chat/ChatPanel';
-import { ParticipantsList } from '@/components/Participants/ParticipantsList';
-import { api } from '@/services/api';
+import { useParticipantsStore } from '../../stores/participantsStore';
+import { VideoGrid } from '../Media/VideoGrid.tsx';
+import { ControlBar } from '../Navigation/ControlBar.tsx';
+import { ChatPanel } from '../Chat/ChatPanel.tsx';
+import { ParticipantsList } from '../Participants/ParticipantsList.tsx';
+import { api } from '../../services/api';
 
 export const MeetingRoom: React.FC = () => {
   const { meetingId } = useParams<{ meetingId: string }>();
   const navigate = useNavigate();
 
-  const { meeting, loadMeeting } = useMeetingStore();
-  const { participants } = useParticipantStore();
+  const { meeting, loadMeeting, leaveMeeting } = useMeetingStore();
+  const { participants } = useParticipantsStore();
 
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
@@ -125,9 +125,7 @@ export const MeetingRoom: React.FC = () => {
 
   const handleLeaveMeeting = async () => {
     try {
-      if (meetingId) {
-        await api.leaveMeeting(meetingId);
-      }
+      await leaveMeeting();
       cleanup();
       navigate('/');
     } catch (error) {
@@ -191,7 +189,6 @@ export const MeetingRoom: React.FC = () => {
             onStartScreenShare={handleStartScreenShare}
             onStopScreenShare={handleStopScreenShare}
         />
-        <div className="h-20" />
       </div>
   );
 };

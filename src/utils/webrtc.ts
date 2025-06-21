@@ -1,8 +1,8 @@
 export class WebRTCConnection {
   private peerConnection: RTCPeerConnection;
   private localStream: MediaStream | null = null;
-  private onIceCandidate: (candidate: RTCIceCandidate) => void;
-  private onTrack: (stream: MediaStream) => void;
+  private readonly onIceCandidate: (candidate: RTCIceCandidate) => void;
+  private readonly onTrack: (stream: MediaStream) => void;
 
   private configuration: RTCConfiguration = {
     iceServers: [

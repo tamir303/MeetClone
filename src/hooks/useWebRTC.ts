@@ -1,7 +1,7 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
-import { socketService } from '@/services/socket';
-import { api } from '@/services/api';
-import { useParticipantStore } from '../stores/participantsStore';
+import { socketService } from '../services/socket';
+import { api } from '../services/api';
+import { useParticipantsStore } from '../stores/participantsStore';
 import { Participant } from '../types';
 
 export const useWebRTC = (meetingId: string) => {
@@ -11,7 +11,7 @@ export const useWebRTC = (meetingId: string) => {
 
   const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
   const localStream = useRef<MediaStream | null>(null);
-  const { participants, updateParticipant, addParticipant, removeParticipant } = useParticipantStore();
+  const { participants, updateParticipant, addParticipant, removeParticipant } = useParticipantsStore();
 
   const createPeerConnection = useCallback((participantId: string) => {
     const peerConnection = new RTCPeerConnection({
