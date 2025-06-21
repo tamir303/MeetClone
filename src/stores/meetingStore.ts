@@ -1,104 +1,106 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import type { Meeting, MeetingSettings, MeetingStatus } from '../types';
+import { Meeting, MeetingSettings, JoinMeetingRequest, JoinMeetingResponse } from '../types';
+import { api } from '../services/api';
 
 interface MeetingState {
-  meetingId: string | null;
-  meeting: Meeting | null;
-  isJoined: boolean;
-  isHost: boolean;
-  meetingStatus: MeetingStatus;
-  settings: MeetingSettings;
-  isRecording: boolean;
-  recordingStartTime: string | null;
-  waitingRoom: boolean;
+    meeting: Meeting | null;
+    isLoading: boolean;
+    error: string | null;
+
+    setMeeting: (meeting: Meeting) => void;
+    createMeeting: (title: string, hostId: string, settings: MeetingSettings) => Promise<Meeting>;
+    joinMeeting: (meetingId: string, data: JoinMeetingRequest) => Promise<JoinMeetingResponse>;
+    loadMeeting: (meetingId: string) => Promise<Meeting>;
+    updateMeetingSettings: (meetingId: string, settings: MeetingSettings) => Promise<void>;
+    endMeeting: (meetingId: string) => Promise<void>;
+    clearMeeting: () => void;
+    setError: (error: string | null) => void;
 }
 
-interface MeetingActions {
-  setMeeting: (meeting: Meeting) => void;
-  joinMeeting: (meetingId: string, asHost?: boolean) => void;
-  leaveMeeting: () => void;
-  updateSettings: (settings: Partial<MeetingSettings>) => void;
-  setMeetingStatus: (status: MeetingStatus) => void;
-  startRecording: () => void;
-  stopRecording: () => void;
-  toggleWaitingRoom: () => void;
-}
+export const useMeetingStore = create<MeetingState>()(
+    devtools(
+        (set, get) => ({
+            meeting: null,
+            isLoading: false,
+            error: null,
 
-const defaultSettings: MeetingSettings = {
-  allowParticipantMicrophone: true,
-  allowParticipantCamera: true,
-  allowScreenShare: true,
-  allowChat: true,
-  allowRecording: true,
-  maxParticipants: 50,
-  requireApproval: false
-};
+            setMeeting: (meeting) => {
+                set({ meeting, error: null });
+            },
 
-export const useMeetingStore = create<MeetingState & MeetingActions>()(
-  devtools(
-    (set, get) => ({
-      // State
-      meetingId: null,
-      meeting: null,
-      isJoined: false,
-      isHost: false,
-      meetingStatus: 'idle',
-      settings: defaultSettings,
-      isRecording: false,
-      recordingStartTime: null,
-      waitingRoom: false,
+            createMeeting: async (title, hostId, settings) => {
+                set({ isLoading: true, error: null });
+                try {
+                    const meeting = await api.createMeeting({ title, hostId, settings });
+                    set({ meeting, isLoading: false });
+                    return meeting;
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : 'Failed to create meeting';
+                    set({ error: errorMessage, isLoading: false });
+                    throw error;
+                }
+            },
 
-      // Actions
-      setMeeting: (meeting) => set({ meeting, meetingId: meeting.id }),
-      
-      joinMeeting: (meetingId, asHost = false) => {
-        set({
-          meetingId,
-          isJoined: true,
-          isHost: asHost,
-          meetingStatus: 'joining'
-        });
-      },
+            joinMeeting: async (meetingId, data) => {
+                set({ isLoading: true, error: null });
+                try {
+                    const response = await api.joinMeeting(meetingId, data);
+                    set({ meeting: response.meeting, isLoading: false });
+                    return response;
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : 'Failed to join meeting';
+                    set({ error: errorMessage, isLoading: false });
+                    throw error;
+                }
+            },
 
-      leaveMeeting: () => {
-        set({
-          meetingId: null,
-          meeting: null,
-          isJoined: false,
-          isHost: false,
-          meetingStatus: 'idle',
-          isRecording: false,
-          recordingStartTime: null
-        });
-      },
+            loadMeeting: async (meetingId) => {
+                set({ isLoading: true, error: null });
+                try {
+                    const meeting = await api.getMeeting(meetingId);
+                    set({ meeting, isLoading: false });
+                    return meeting;
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : 'Failed to load meeting';
+                    set({ error: errorMessage, isLoading: false });
+                    throw error;
+                }
+            },
 
-      updateSettings: (newSettings) => {
-        set(state => ({
-          settings: { ...state.settings, ...newSettings }
-        }));
-      },
+            updateMeetingSettings: async (meetingId, settings) => {
+                try {
+                    await api.updateMeetingSettings(meetingId, settings);
+                    const { meeting } = get();
+                    if (meeting) {
+                        set({ meeting: { ...meeting, settings } });
+                    }
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : 'Failed to update settings';
+                    set({ error: errorMessage });
+                    throw error;
+                }
+            },
 
-      setMeetingStatus: (status) => set({ meetingStatus: status }),
+            endMeeting: async (meetingId) => {
+                try {
+                    await api.endMeeting(meetingId);
+                    set({ meeting: null });
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : 'Failed to end meeting';
+                    set({ error: errorMessage });
+                    throw error;
+                }
+            },
 
-      startRecording: () => {
-        set({
-          isRecording: true,
-          recordingStartTime: new Date().toISOString()
-        });
-      },
+            clearMeeting: () => {
+                set({ meeting: null, error: null });
+            },
 
-      stopRecording: () => {
-        set({
-          isRecording: false,
-          recordingStartTime: null
-        });
-      },
-
-      toggleWaitingRoom: () => {
-        set(state => ({ waitingRoom: !state.waitingRoom }));
-      }
-    }),
-    { name: 'meeting-store' }
-  )
+            setError: (error) => {
+                set({ error });
+            },
+        }),
+        { name: 'meeting-store' }
+    )
 );

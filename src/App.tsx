@@ -1,67 +1,37 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React from 'react';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { HomePage } from './pages/HomePage';
-import { MeetingLobby } from './components/Meeting/MeetingLobby';
+import { CreateMeeting } from './components/Meeting/CreateMeeting';
+import { JoinMeeting } from './components/Meeting/JoinMeeting';
 import { MeetingRoom } from './components/Meeting/MeetingRoom';
-import { useMeetingStore } from './stores/meetingStore';
 import { useUIStore } from './stores/uiStore';
 
 function App() {
-  const [currentMeetingId, setCurrentMeetingId] = useState<string | null>(null);
-  const [inLobby, setInLobby] = useState(false);
-  
-  const { isJoined } = useMeetingStore();
-  const { theme } = useUIStore();
+    const { theme } = useUIStore();
 
-  React.useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-  }, [theme]);
+    React.useEffect(() => {
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+    }, [theme]);
 
-  const handleCreateMeeting = (meetingId: string) => {
-    setCurrentMeetingId(meetingId);
-    setInLobby(true);
-  };
-
-  const handleJoinMeeting = (meetingId: string) => {
-    setCurrentMeetingId(meetingId);
-    setInLobby(true);
-  };
-
-  const handleJoinFromLobby = () => {
-    setInLobby(false);
-  };
-
-  const handleLeaveMeeting = () => {
-    setCurrentMeetingId(null);
-    setInLobby(false);
-  };
-
-  // Reset meeting state when leaving
-  React.useEffect(() => {
-    if (!isJoined && currentMeetingId && !inLobby) {
-      handleLeaveMeeting();
-    }
-  }, [isJoined, currentMeetingId, inLobby]);
-
-  if (currentMeetingId && inLobby) {
     return (
-      <MeetingLobby
-        meetingId={currentMeetingId}
-        onJoin={handleJoinFromLobby}
-      />
+        <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/create" element={<CreateMeeting />} />
+            <Route path="/join/:meetingId" element={<JoinMeetingWrapper />} />
+            <Route path="/meeting/:meetingId" element={<MeetingRoom />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
     );
-  }
-
-  if (currentMeetingId && isJoined && !inLobby) {
-    return <MeetingRoom meetingId={currentMeetingId} />;
-  }
-
-  return (
-    <HomePage
-      onCreateMeeting={handleCreateMeeting}
-      onJoinMeeting={handleJoinMeeting}
-    />
-  );
 }
+
+const JoinMeetingWrapper: React.FC = () => {
+    const { meetingId } = useParams<{ meetingId: string }>();
+
+    if (!meetingId) {
+        return <Navigate to="/" replace />;
+    }
+
+    return <JoinMeeting meetingId={meetingId} />;
+};
 
 export default App;

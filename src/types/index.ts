@@ -1,23 +1,3 @@
-export interface Meeting {
-  id: string;
-  title: string;
-  hostId: string;
-  createdAt: string;
-  startTime?: string;
-  endTime?: string;
-  settings: MeetingSettings;
-}
-
-export interface MeetingSettings {
-  allowParticipantMicrophone: boolean;
-  allowParticipantCamera: boolean;
-  allowScreenShare: boolean;
-  allowChat: boolean;
-  allowRecording: boolean;
-  maxParticipants: number;
-  requireApproval: boolean;
-}
-
 export interface Participant {
   id: string;
   displayName: string;
@@ -64,4 +44,48 @@ export interface DeviceSettings {
   videoQuality: VideoQuality;
   noiseSupression: boolean;
   echoCancellation: boolean;
+}
+
+export interface MeetingSettings {
+  allowParticipantMicrophone: boolean;
+  allowParticipantCamera: boolean;
+  allowScreenShare: boolean;
+  allowChat: boolean;
+  allowRecording: boolean;
+  maxParticipants: number;
+  requireApproval: boolean;
+}
+
+export interface CreateMeetingRequest {
+  title?: string;
+  hostId: string;
+  settings: MeetingSettings;
+}
+
+export interface JoinMeetingRequest {
+  displayName: string;
+  email?: string;
+  deviceCapabilities: {
+    video: boolean;
+    audio: boolean;
+    screenShare: boolean;
+  };
+}
+
+export interface Meeting {
+  id: string;
+  title?: string;
+  hostId: string;
+  createdAt: string;
+  startTime?: string;
+  endTime?: string;
+  participants: Participant[];
+  settings: MeetingSettings;
+}
+
+export interface JoinMeetingResponse {
+  participantId: string;
+  token: string;
+  meeting: Meeting;
+  iceServers: RTCIceServer[];
 }

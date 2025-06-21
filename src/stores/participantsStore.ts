@@ -1,96 +1,74 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import type { Participant, LocalParticipant } from '../types';
+import { Participant } from '../types';
 
-interface ParticipantsState {
-  participants: Participant[];
-  localParticipant: LocalParticipant | null;
-  speakingParticipants: string[];
-  dominantSpeaker: string | null;
+interface ParticipantState {
+    participants: Participant[];
+    currentParticipant: Participant | null;
+    dominantSpeaker: string | null;
+
+    setParticipants: (participants: Participant[]) => void;
+    addParticipant: (participant: Participant) => void;
+    removeParticipant: (participantId: string) => void;
+    updateParticipant: (participantId: string, updates: Partial<Participant & { stream?: MediaStream }>) => void;
+    setCurrentParticipant: (participant: Participant) => void;
+    setLocalParticipant: (participant: Participant) => void;
+    setDominantSpeaker: (participantId: string | null) => void;
+    clearParticipants: () => void;
 }
 
-interface ParticipantsActions {
-  setLocalParticipant: (participant: LocalParticipant) => void;
-  addParticipant: (participant: Participant) => void;
-  removeParticipant: (id: string) => void;
-  updateParticipant: (id: string, updates: Partial<Participant>) => void;
-  setSpeaking: (id: string, speaking: boolean) => void;
-  setDominantSpeaker: (id: string | null) => void;
-  muteParticipant: (id: string) => void;
-  kickParticipant: (id: string) => void;
-  clearParticipants: () => void;
-}
+export const useParticipantStore = create<ParticipantState>()(
+    devtools(
+        (set) => ({
+            participants: [],
+            currentParticipant: null,
+            dominantSpeaker: null,
 
-export const useParticipantsStore = create<ParticipantsState & ParticipantsActions>()(
-  devtools(
-    (set, get) => ({
-      // State
-      participants: [],
-      localParticipant: null,
-      speakingParticipants: [],
-      dominantSpeaker: null,
+            setParticipants: (participants) => {
+                set({ participants });
+            },
 
-      // Actions
-      setLocalParticipant: (participant) => set({ localParticipant: participant }),
+            addParticipant: (participant) => {
+                set(state => ({
+                    participants: [...state.participants.filter(p => p.id !== participant.id), participant],
+                }));
+            },
 
-      addParticipant: (participant) => {
-        const { participants } = get();
-        if (!participants.find(p => p.id === participant.id)) {
-          set({ participants: [...participants, participant] });
-        }
-      },
+            removeParticipant: (participantId) => {
+                set(state => ({
+                    participants: state.participants.filter(p => p.id !== participantId),
+                    dominantSpeaker: state.dominantSpeaker === participantId ? null : state.dominantSpeaker,
+                }));
+            },
 
-      removeParticipant: (id) => {
-        set(state => ({
-          participants: state.participants.filter(p => p.id !== id),
-          speakingParticipants: state.speakingParticipants.filter(pid => pid !== id),
-          dominantSpeaker: state.dominantSpeaker === id ? null : state.dominantSpeaker
-        }));
-      },
+            updateParticipant: (participantId, updates) => {
+                set(state => ({
+                    participants: state.participants.map(p =>
+                        p.id === participantId ? { ...p, ...updates } : p
+                    ),
+                }));
+            },
 
-      updateParticipant: (id, updates) => {
-        set(state => ({
-          participants: state.participants.map(p =>
-            p.id === id ? { ...p, ...updates } : p
-          )
-        }));
-        
-        // Update local participant if it's the same ID
-        const { localParticipant } = get();
-        if (localParticipant && localParticipant.id === id) {
-          set({ localParticipant: { ...localParticipant, ...updates } });
-        }
-      },
+            setCurrentParticipant: (participant) => {
+                set({ currentParticipant: participant });
+            },
 
-      setSpeaking: (id, speaking) => {
-        set(state => {
-          const speakingParticipants = speaking
-            ? [...state.speakingParticipants.filter(pid => pid !== id), id]
-            : state.speakingParticipants.filter(pid => pid !== id);
-          
-          return { speakingParticipants };
-        });
-      },
+            setLocalParticipant: (participant) => {
+                set({ currentParticipant: participant });
+            },
 
-      setDominantSpeaker: (id) => set({ dominantSpeaker: id }),
+            setDominantSpeaker: (participantId) => {
+                set({ dominantSpeaker: participantId });
+            },
 
-      muteParticipant: (id) => {
-        get().updateParticipant(id, { isAudioEnabled: false });
-      },
-
-      kickParticipant: (id) => {
-        get().removeParticipant(id);
-      },
-
-      clearParticipants: () => {
-        set({
-          participants: [],
-          localParticipant: null,
-          speakingParticipants: [],
-          dominantSpeaker: null
-        });
-      }
-    }),
-    { name: 'participants-store' }
-  )
+            clearParticipants: () => {
+                set({
+                    participants: [],
+                    currentParticipant: null,
+                    dominantSpeaker: null,
+                });
+            },
+        }),
+        { name: 'participants-store' }
+    )
 );

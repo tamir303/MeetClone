@@ -1,113 +1,109 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import type { LayoutType, Theme } from '../types';
+import { LayoutType, Theme } from '@/types';
 
 interface UIState {
-  sidebarOpen: boolean;
-  chatOpen: boolean;
-  participantsOpen: boolean;
-  settingsOpen: boolean;
-  fullscreen: boolean;
-  theme: Theme;
-  layout: LayoutType;
-  isControlBarVisible: boolean;
-  notifications: boolean;
+    sidebarOpen: boolean;
+    chatOpen: boolean;
+    participantsOpen: boolean;
+    settingsOpen: boolean;
+    fullscreen: boolean;
+    theme: Theme;
+    layout: LayoutType;
+    isControlBarVisible: boolean;
+    notifications: boolean;
+
+    toggleSidebar: () => void;
+    toggleChat: () => void;
+    toggleParticipants: () => void;
+    toggleSettings: () => void;
+    setLayout: (layout: LayoutType) => void;
+    toggleTheme: () => void;
+    enterFullscreen: () => void;
+    exitFullscreen: () => void;
+    toggleFullscreen: () => void;
+    setControlBarVisible: (visible: boolean) => void;
+    toggleNotifications: () => void;
+    closeAllPanels: () => void;
 }
 
-interface UIActions {
-  toggleSidebar: () => void;
-  toggleChat: () => void;
-  toggleParticipants: () => void;
-  toggleSettings: () => void;
-  setLayout: (layout: LayoutType) => void;
-  toggleTheme: () => void;
-  enterFullscreen: () => void;
-  exitFullscreen: () => void;
-  toggleFullscreen: () => void;
-  setControlBarVisible: (visible: boolean) => void;
-  toggleNotifications: () => void;
-  closeAllPanels: () => void;
-}
+export const useUIStore = create<UIState>()(
+    devtools(
+        persist(
+            (set, get) => ({
+                sidebarOpen: false,
+                chatOpen: false,
+                participantsOpen: false,
+                settingsOpen: false,
+                fullscreen: false,
+                theme: 'light',
+                layout: 'grid',
+                isControlBarVisible: true,
+                notifications: true,
 
-export const useUIStore = create<UIState & UIActions>()(
-  devtools(
-    persist(
-      (set, get) => ({
-        // State
-        sidebarOpen: false,
-        chatOpen: false,
-        participantsOpen: false,
-        settingsOpen: false,
-        fullscreen: false,
-        theme: 'light',
-        layout: 'grid',
-        isControlBarVisible: true,
-        notifications: true,
+                toggleSidebar: () => set(state => ({ sidebarOpen: !state.sidebarOpen })),
 
-        // Actions
-        toggleSidebar: () => set(state => ({ sidebarOpen: !state.sidebarOpen })),
-        
-        toggleChat: () => set(state => ({ chatOpen: !state.chatOpen })),
-        
-        toggleParticipants: () => set(state => ({ participantsOpen: !state.participantsOpen })),
-        
-        toggleSettings: () => set(state => ({ settingsOpen: !state.settingsOpen })),
+                toggleChat: () => set(state => ({ chatOpen: !state.chatOpen })),
 
-        setLayout: (layout) => set({ layout }),
+                toggleParticipants: () => set(state => ({ participantsOpen: !state.participantsOpen })),
 
-        toggleTheme: () => {
-          set(state => {
-            const newTheme = state.theme === 'light' ? 'dark' : 'light';
-            document.documentElement.classList.toggle('dark', newTheme === 'dark');
-            return { theme: newTheme };
-          });
-        },
+                toggleSettings: () => set(state => ({ settingsOpen: !state.settingsOpen })),
 
-        enterFullscreen: () => {
-          if (document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen();
-            set({ fullscreen: true });
-          }
-        },
+                setLayout: (layout) => set({ layout }),
 
-        exitFullscreen: () => {
-          if (document.exitFullscreen) {
-            document.exitFullscreen();
-            set({ fullscreen: false });
-          }
-        },
+                toggleTheme: () => {
+                    set(state => {
+                        const newTheme = state.theme === 'light' ? 'dark' : 'light';
+                        document.documentElement.classList.toggle('dark', newTheme === 'dark');
+                        return { theme: newTheme };
+                    });
+                },
 
-        toggleFullscreen: () => {
-          const { fullscreen } = get();
-          if (fullscreen) {
-            get().exitFullscreen();
-          } else {
-            get().enterFullscreen();
-          }
-        },
+                enterFullscreen: () => {
+                    if (document.documentElement.requestFullscreen) {
+                        document.documentElement.requestFullscreen();
+                        set({ fullscreen: true });
+                    }
+                },
 
-        setControlBarVisible: (visible) => set({ isControlBarVisible: visible }),
+                exitFullscreen: () => {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                        set({ fullscreen: false });
+                    }
+                },
 
-        toggleNotifications: () => set(state => ({ notifications: !state.notifications })),
+                toggleFullscreen: () => {
+                    const { fullscreen } = get();
+                    if (fullscreen) {
+                        get().exitFullscreen();
+                    } else {
+                        get().enterFullscreen();
+                    }
+                },
 
-        closeAllPanels: () => {
-          set({
-            sidebarOpen: false,
-            chatOpen: false,
-            participantsOpen: false,
-            settingsOpen: false
-          });
-        }
-      }),
-      {
-        name: 'ui-store',
-        partialize: (state) => ({
-          theme: state.theme,
-          layout: state.layout,
-          notifications: state.notifications
-        })
-      }
-    ),
-    { name: 'ui-store' }
-  )
+                setControlBarVisible: (visible) => set({ isControlBarVisible: visible }),
+
+                toggleNotifications: () => set(state => ({ notifications: !state.notifications })),
+
+                closeAllPanels: () => {
+                    set({
+                        sidebarOpen: false,
+                        chatOpen: false,
+                        participantsOpen: false,
+                        settingsOpen: false
+                    });
+                }
+            }),
+            {
+                name: 'ui-store',
+                partialize: (state) => ({
+                    theme: state.theme,
+                    layout: state.layout,
+                    notifications: state.notifications
+                })
+            }
+        ),
+        { name: 'ui-store' }
+    )
 );

@@ -1,17 +1,11 @@
 import { useEffect } from 'react';
-import { useMediaStore } from '../stores/mediaStore';
 import { useChatStore } from '../stores/chatStore';
-import { useMeetingStore } from '../stores/meetingStore';
-import { KEYBOARD_SHORTCUTS } from '../constants';
 
 export const useKeyboardShortcuts = () => {
-  const { toggleAudio, toggleVideo, startScreenShare, stopScreenShare, isScreenSharing } = useMediaStore();
   const { togglePanel: toggleChat } = useChatStore();
-  const { leaveMeeting } = useMeetingStore();
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Ignore shortcuts when typing in input fields
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
         return;
       }
@@ -21,42 +15,24 @@ export const useKeyboardShortcuts = () => {
       const isShiftPressed = event.shiftKey;
 
       switch (key) {
-        case KEYBOARD_SHORTCUTS.TOGGLE_MUTE:
+        case 'Space':
           if (!isCtrlPressed && !isShiftPressed) {
             event.preventDefault();
-            toggleAudio();
+            // Toggle mute functionality would go here
           }
           break;
 
-        case KEYBOARD_SHORTCUTS.TOGGLE_VIDEO:
+        case 'KeyE':
           if (isCtrlPressed && !isShiftPressed) {
             event.preventDefault();
-            toggleVideo();
+            // Toggle video functionality would go here
           }
           break;
 
-        case KEYBOARD_SHORTCUTS.TOGGLE_CHAT:
+        case 'KeyH':
           if (isCtrlPressed && isShiftPressed) {
             event.preventDefault();
             toggleChat();
-          }
-          break;
-
-        case KEYBOARD_SHORTCUTS.LEAVE_MEETING:
-          if (isCtrlPressed && isShiftPressed) {
-            event.preventDefault();
-            leaveMeeting();
-          }
-          break;
-
-        case 'KeyS':
-          if (isCtrlPressed && !isShiftPressed) {
-            event.preventDefault();
-            if (isScreenSharing) {
-              stopScreenShare();
-            } else {
-              startScreenShare();
-            }
           }
           break;
 
@@ -67,5 +43,5 @@ export const useKeyboardShortcuts = () => {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [toggleAudio, toggleVideo, toggleChat, leaveMeeting, startScreenShare, stopScreenShare, isScreenSharing]);
+  }, [toggleChat]);
 };
